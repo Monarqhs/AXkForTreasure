@@ -30,12 +30,71 @@ function createPlane(w, h){
     return mesh
 }
 
+function createCylinder(x, y, z){
+    const geo = new thr.CylinderGeometry(3, 3, 30)
+    const texture = textureLoader.load("./assets/pillar.jpg") 
+    const material = new thr.MeshPhongMaterial({map: texture})
+    const mesh = new thr.Mesh(geo, material)
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    mesh.position.x += x
+    mesh.position.y += y
+    mesh.position.z += z
+    
+    return mesh
+}
+
+function createSphere(){
+    const geo = new thr.SphereGeometry(2, 32, 16)
+    // const texture = textureLoader.load("./assets/pillar.jpg") 
+    const material = new thr.MeshPhongMaterial({color: '#FFFF00'})
+    const mesh = new thr.Mesh(geo, material)
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    mesh.position.set(0, 8, 0)
+    
+    return mesh
+}
+
+function createText(text){
+    const fontLoader = new thr.FontLoader()
+
+    fontLoader.load("./Three JS/examples/fonts/helvetiker_bold.typeface.json", 
+        font => {
+            const textGeo = new thr.TextGeometry(text, {
+                font: font,
+                size: 10,
+                height: 3
+            })
+            const textMat = new thr.MeshBasicMaterial({
+                color: "#FF0000"
+            })
+            mesh = new thr.Mesh(textGeo, textMat)
+
+            mesh.position.set(-10, 18, 0)
+            scene.add(mesh)
+            // camera.lookAt(mesh.position)
+    })
+}
+
 // Object
 const ground = createPlane(100, 100)
-ground.position.set(0, 0, 0)
+ground.position.set(0, -6, 0)
 ground.rotation.set(-Math.PI/2, 0, 0);
 ground.receiveShadow = true
 scene.add(ground)
+
+const pillar1 = createCylinder(15, 15, 15)
+const pillar2 = createCylinder(-15, 15, 15)
+const pillar3 = createCylinder(-15, 15, -15)
+const pillar4 = createCylinder(15, 15, -15)
+scene.add(pillar1, pillar2, pillar3, pillar4)
+
+const text = createText("Don't Click Me!")
+scene.add(text)
+
+const treasure = createSphere()
+scene.add(treasure)
 
 // Altar
 let load3DModel = url => {
@@ -56,6 +115,7 @@ pointLight.castShadow = true
 function createSpotlight14(x, y, z){
     const spotLight = new thr.SpotLight('#FFFFFF', 0.6, 50)
     spotLight.position.set(x, y, z)
+    spotLight.castShadow = true
     
     return spotLight
 }
@@ -73,12 +133,12 @@ function createSpotlight56(x, y, z){
 }
 const sL5 = createSpotlight56(50, 0, 0)
 const sL6 = createSpotlight56(-50, 0, 0)
-scene.add(sL5, sL6)
+// scene.add(sL5, sL6)
 
 // Camera Frame
 orbitCamera.position.set(0, 20, 70)
 
-camera.position.set(0, 20,70)
+camera.position.set(0, 20, 70)
 camera.lookAt(0, 0, 0)
 
 // render
