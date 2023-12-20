@@ -37,9 +37,7 @@ function createCylinder(x, y, z){
     const mesh = new thr.Mesh(geo, material)
     mesh.castShadow = true
     mesh.receiveShadow = true
-    mesh.position.x += x
-    mesh.position.y += y
-    mesh.position.z += z
+    mesh.position.set(x, y, z)
     
     return mesh
 }
@@ -77,6 +75,40 @@ function createText(text){
     })
 }
 
+function createSkyBox(){
+    const boxGeo = new thr.BoxGeometry(1000, 1000, 1000)
+    const textureLoader = new thr.TextureLoader()
+    //kanan kiri atas bawah depan belakang
+    const boxMatArr = [
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/right.png"),
+            side: thr.DoubleSide,
+        }),
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/left.png"),
+            side: thr.DoubleSide,
+        }),
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/top.png"),
+            side: thr.DoubleSide,
+        }),
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/bottom.png"),
+            side: thr.DoubleSide,
+        }),
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/front.png"),
+            side: thr.DoubleSide,
+        }),
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/back.png"),
+            side: thr.DoubleSide,
+        }),
+    ] 
+    const skybox = new thr.Mesh(boxGeo, boxMatArr)
+    return skybox
+}
+
 // Object
 const ground = createPlane(100, 100)
 ground.position.set(0, -6, 0)
@@ -89,6 +121,9 @@ const pillar2 = createCylinder(-15, 15, 15)
 const pillar3 = createCylinder(-15, 15, -15)
 const pillar4 = createCylinder(15, 15, -15)
 scene.add(pillar1, pillar2, pillar3, pillar4)
+
+const sky = createSkyBox()
+scene.add(sky)
 
 const text = createText("Don't Click Me!")
 scene.add(text)
