@@ -1,309 +1,277 @@
-console.log("connected");
-import * as THR from "./Three JS/build/three.module.js";
-import { OrbitControls } from "./Three JS/examples/jsm/controls/OrbitControls.js";
-import { GLTFLoader } from "./Three JS/examples/jsm/loaders/GLTFLoader.js";
+import * as thr from './Three JS/build/three.module.js'
+import {OrbitControls} from './Three JS/examples/jsm/controls/OrbitControls.js'
+import {GLTFLoader} from "./Three JS/examples/jsm/loaders/GLTFLoader.js"
 
-let scene, sceneCamera, orbitCamera, renderer, control, currentCamera;
-const textureLoader = new THR.TextureLoader();
-const gltfLoader = new GLTFLoader();
-const fontLoader = new THR.FontLoader();
-var raycast = new THR.Raycaster();
-var pointer = new THR.Vector2();
+// Three Element
+var raycast = new thr.Raycaster();
+var pointer = new thr.Vector2();
+const scene = new thr.Scene()
+const camera = new thr.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+const renderer = new thr.WebGLRenderer({antialias: true})
 
-// Scene
-scene = new THR.Scene();
+// Texture Loader
+const textureLoader = new thr.TextureLoader()
 
-// Renderer
-let width = window.innerWidth;
-let height = window.innerHeight;
-renderer = new THR.WebGLRenderer({
-  antialias: true,
-});
+// Orbit Camera
+const orbitCamera = new thr.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+const control = new OrbitControls(orbitCamera, renderer.domElement)
 
-// Camera 1
-let fov = 45;
-let aspect = window.innerWidth / window.innerHeight;
-let near = 0.1;
-let far = 1000;
-sceneCamera = new THR.PerspectiveCamera(fov, aspect, near, far);
-const cameraPosition = new THR.Vector3(0, 20, 70);
-sceneCamera.position.copy(cameraPosition);
-sceneCamera.lookAt(0, 0, 0);
+let currentCamera = camera
 
-// Camera 2
-orbitCamera = new THR.PerspectiveCamera(fov, aspect, near, far);
-control = new OrbitControls(orbitCamera, renderer.domElement);
-// orbitCamera.position.copy(cameraPosition)
-// orbitCamera.lookAt(0, 0, 0)
+renderer.shadowMap.enabled = true
+renderer.setSize(window.innerWidth, window.innerHeight)
 
-currentCamera = sceneCamera;
+document.body.appendChild(renderer.domElement)
 
 // Switch Camera
 window.addEventListener("keydown", (e) => {
-  // console.log(e)
-  switch (e.key) {
-    case "f":
-      currentCamera = currentCamera === sceneCamera ? orbitCamera : sceneCamera;
-      control.object = currentCamera;
-
-      // sceneCamera.position.set(0, 20, 70);
-
-      break;
-  }
-  console.log(currentCamera);
-});
-
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THR.PCFShadowMap;
-renderer.setSize(width, height);
-renderer.clear();
-document.body.appendChild(renderer.domElement);
-// renderer.domElement.addEventListener('mousedown', onMouseDown);
-
-function pointLight() {
-  const pointLight = new THR.PointLight(0xff0000, 2, 200);
-  pointLight.position.set(0, 13, 0);
-  pointLight.castShadow = true;
-  scene.add(pointLight);
-}
-
-function createSpotlight(color, intensity, distance) {
-  const spotlight = new THR.SpotLight(color, intensity, distance);
-  spotlight.castShadow = true;
-  return spotlight;
-}
-
-const spotlight1 = createSpotlight(0xffffff, 0.6, 60);
-spotlight1.position.set(13, 2, 13);
-scene.add(spotlight1);
-
-const spotlight2 = createSpotlight(0xffffff, 0.6, 60);
-spotlight2.position.set(13, 2, -13);
-scene.add(spotlight2);
-
-const spotlight3 = createSpotlight(0xffffff, 0.6, 60);
-spotlight3.position.set(-13, 2, 13)
-scene.add(spotlight3);
-
-const spotlight4 = createSpotlight(0xffffff, 0.6, 60);
-spotlight4.position.set(-13, 2, -13);
-scene.add(spotlight4);
-
-const spotlight5 = createSpotlight(0xff0000, 0.8, 50);
-spotlight5.position.set(6, 13, 0);
-spotlight5.target.position.set(50, 0, 0);
-// scene.add(spotlight5)
-
-const spotlight6 = createSpotlight(0xff0000, 0.8, 50);
-spotlight6.position.set(-6, 13, 0);
-spotlight6.target.position.set(-50, 0, 0);
-// scene.add(spotlight6)
-
-function ground() {
-  const groundGeo = new THR.PlaneGeometry(100, 100);
-  const texture = textureLoader.load("./assets/sand.jpg");
-  const groundMat = new THR.MeshPhongMaterial({
-    map: texture,
-    side: THR.DoubleSide,
-  });
-  const ground = new THR.Mesh(groundGeo, groundMat);
-  ground.position.set(0, 0, 0);
-  ground.rotation.set(-Math.PI / 2, 0, 0);
-  ground.receiveShadow = true;
-  scene.add(ground);
-}
-
-function altar() {
-  console.log("./assets/altar_for_diana/texture/scene.gltf");
-  gltfLoader.load("./assets/altar_for_diana/scene.gltf", function (gltf) {
-    gltf.scene.position.set(0, 5, 0);
-    gltf.scene.rotation.set(-Math.PI / 2, -Math.PI / 2, -Math.PI / 2);
-    const altar = gltf.scene;
-
-    altar.castShadow = true;
-    altar.receiveShadow = true;
-
-    scene.add(altar);
-  });
-}
-
-let clickText;
-
-function text() {
-  fontLoader.load(
-    "./Three JS/examples/fonts/helvetiker_bold.typeface.json",
-    (font) => {
-      const textGeo = new THR.TextGeometry("Don't Click Me!", {
-        font: font,
-        size: 2,
-        height: 2,
-      });
-      const textMat = new THR.MeshPhongMaterial({
-        color: 0xffffff,
-      });
-      clickText = new THR.Mesh(textGeo, textMat);
-      clickText.position.set(-10, 18, 0);
-      clickText.castShadow = true;
-      clickText.receiveShadow = true;
-
-      scene.add(clickText);
+    if (e.key === " ") {
+        currentCamera = currentCamera === camera ? orbitCamera : camera;
+        control.object = currentCamera;
+    
+        if (currentCamera === orbitCamera) {
+          orbitCamera.position.set(0, 20, 70);
+          control.enabled = true;
+        } else {
+          camera.position.set(0, 20, 70);
+          control.enabled = false;
+        }
     }
-  );
+    console.log(currentCamera)
+  })
+
+// CreateObject
+function createPlane(w, h){
+    const geo = new thr.PlaneGeometry(w, h)
+    const texture = textureLoader.load("./assets/sand.jpg") 
+    const material = new thr.MeshPhongMaterial({map: texture, side: thr.DoubleSide})
+    const mesh = new thr.Mesh(geo, material)
+    return mesh
 }
 
-let sphere;
-
-function treasure() {
-  const sphereGeo = new THR.SphereGeometry(2, 32, 16);
-  const sphereMat = new THR.MeshPhongMaterial({
-    color: 0xffff00,
-  });
-  sphere = new THR.Mesh(sphereGeo, sphereMat);
-  sphere.position.set(0, 13, 0);
-  sphere.castShadow = true;
-  sphere.receiveShadow = true;
-  scene.add(sphere);
+function createCylinder(x, y, z){
+    const geo = new thr.CylinderGeometry(3, 3, 30)
+    const texture = textureLoader.load("./assets/pillar.jpg") 
+    const material = new thr.MeshPhongMaterial({map: texture})
+    const mesh = new thr.Mesh(geo, material)
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    mesh.position.set(x, y, z)
+    
+    return mesh
 }
 
-function createPillar(radiusTop, radiusBottom, height) {
-  const pillarGeo = new THR.CylinderGeometry(radiusTop, radiusBottom, height);
-  const texture = textureLoader.load("./assets/pillar.jpg");
-  const pillarMat = new THR.MeshPhongMaterial({
-    map: texture,
-  });
-  const pillar = new THR.Mesh(pillarGeo, pillarMat);
-  pillar.castShadow = true;
-  pillar.receiveShadow = true;
-  return pillar;
+function createSphere(){
+    const geo = new thr.SphereGeometry(2, 32, 16)
+    const material = new thr.MeshPhongMaterial({color: '#FFFF00'})
+    const mesh = new thr.Mesh(geo, material)
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    mesh.position.set(0, 13, 0)
+    
+    return mesh
 }
 
-const pillar1 = createPillar(3, 3, 30);
-pillar1.position.set(15, 15, 15);
-scene.add(pillar1);
+let Text
 
-const pillar2 = createPillar(3, 3, 30);
-pillar2.position.set(-15, 15, 15);
-scene.add(pillar2);
+function createText(text){
+    const fontLoader = new thr.FontLoader()
 
-const pillar3 = createPillar(3, 3, 30);
-pillar3.position.set(15, 15, -15);
-scene.add(pillar3);
+    fontLoader.load("./Three JS/examples/fonts/helvetiker_bold.typeface.json", 
+        font => {
+            const textGeo = new thr.TextGeometry(text, {
+                font: font,
+                size: 2,
+                height: 2
+            })
+            const textMat = new thr.MeshPhongMaterial({
+                color: "#FFFFFF"
+            })
+            Text = new thr.Mesh(textGeo, textMat)
+            Text.castShadow = true
+            Text.receiveShadow = true
+            Text.position.set(-10, 18, 0)
 
-const pillar4 = createPillar(3, 3, 30);
-pillar4.position.set(-15, 15, -15);
-scene.add(pillar4);
-
-function skybox() {
-  const skyboxGeo = new THR.BoxGeometry(
-    window.innerWidth,
-    window.innerHeight,
-    1000
-  );
-
-  const skyboxMat = [
-    new THR.MeshBasicMaterial({
-      map: textureLoader.load("assets/skybox/right.png"),
-      side: THR.DoubleSide,
-    }),
-    new THR.MeshBasicMaterial({
-      map: textureLoader.load("assets/skybox/left.png"),
-      side: THR.DoubleSide,
-    }),
-    new THR.MeshBasicMaterial({
-      map: textureLoader.load("assets/skybox/top.png"),
-      side: THR.DoubleSide,
-    }),
-    new THR.MeshBasicMaterial({
-      map: textureLoader.load("assets/skybox/bottom.png"),
-      side: THR.DoubleSide,
-    }),
-    new THR.MeshBasicMaterial({
-      map: textureLoader.load("assets/skybox/front.png"),
-      side: THR.DoubleSide,
-    }),
-    new THR.MeshBasicMaterial({
-      map: textureLoader.load("assets/skybox/back.png"),
-      side: THR.DoubleSide,
-    }),
-  ];
-
-  const skybox = new THR.Mesh(skyboxGeo, skyboxMat);
-
-  scene.add(skybox);
+            scene.add(Text)
+    })
 }
 
-function pillarFallAnimation() {
-  requestAnimationFrame(pillarFallAnimation);
-  if (
-    pillar1.position.y > 3 &&
-    pillar1.rotation.x < Math.PI / 2 &&
-    pillar1.position.z < 40
-  ) {
-    pillar1.position.y -= 0.2;
-    pillar1.rotation.x += 0.03;
-    pillar1.position.z += 0.3;
-  }
-  if (
-    pillar2.position.y > 3 &&
-    pillar2.rotation.x < Math.PI / 2 &&
-    pillar2.position.z < 40
-  ) {
-    pillar2.position.y -= 0.2;
-    pillar2.rotation.x += 0.03;
-    pillar2.position.z += 0.3;
-  }
+function createSkyBox(){
+    const boxGeo = new thr.BoxGeometry(1000, 1000, 1000)
+    const textureLoader = new thr.TextureLoader()
+    //kanan kiri atas bawah depan belakang
+    const boxMatArr = [
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/right.png"),
+            side: thr.DoubleSide,
+        }),
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/left.png"),
+            side: thr.DoubleSide,
+        }),
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/top.png"),
+            side: thr.DoubleSide,
+        }),
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/bottom.png"),
+            side: thr.DoubleSide,
+        }),
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/front.png"),
+            side: thr.DoubleSide,
+        }),
+        new thr.MeshBasicMaterial({
+            map: textureLoader.load("./assets/skybox/back.png"),
+            side: thr.DoubleSide,
+        }),
+    ] 
+    const skybox = new thr.Mesh(boxGeo, boxMatArr)
+    return skybox
 }
+
+// Object
+const ground = createPlane(100, 100)
+ground.position.set(0, 0, 0)
+ground.rotation.set(-Math.PI/2, 0, 0);
+ground.receiveShadow = true
+scene.add(ground)
+
+const pillar1 = createCylinder(15, 15, 15)
+const pillar2 = createCylinder(-15, 15, 15)
+const pillar3 = createCylinder(15, 15, -15)
+const pillar4 = createCylinder(-15, 15, -15)
+scene.add(pillar1, pillar2, pillar3, pillar4)
+
+const sky = createSkyBox()
+scene.add(sky)
+
+const text = createText("Don't Click Me!")
+scene.add(text)
+
+let treasure = createSphere()
+scene.add(treasure)
+
+function pillarFall() {
+    requestAnimationFrame(pillarFall);
+    if (
+      pillar1.position.y > 3 &&
+      pillar1.rotation.x < Math.PI / 2 &&
+      pillar1.position.z < 40
+    ) {
+      pillar1.position.y -= 0.2;
+      pillar1.rotation.x += 0.03;
+      pillar1.position.z += 0.3;
+    }
+
+    if (
+      pillar2.position.y > 3 &&
+      pillar2.rotation.x < Math.PI / 2 &&
+      pillar2.position.z < 40
+    ) {
+      pillar2.position.y -= 0.2;
+      pillar2.rotation.x += 0.03;
+      pillar2.position.z += 0.3;
+    }
+}
+
+// Altar
+let load3DModel = url => {
+    let loader = new GLTFLoader();
+    loader.load(url, (gltf) => {
+        gltf.scene.position.set(0, 5, 0);
+        gltf.scene.rotation.set(-Math.PI / 2, -Math.PI / 2, -Math.PI / 2);
+        let object = gltf.scene;
+        object.castShadow = true;
+        object.receiveShadow = true;
+        scene.add(object)
+    })
+}
+
+load3DModel("./assets/altar_for_diana/scene.gltf")
+
+// Lighting
+const pointLight = new thr.PointLight('#FF0000', 2, 200)
+pointLight.position.set(0, 13, 0)
+pointLight.castShadow = true
+scene.add(pointLight)
+
+function createSpotlight14(x, y, z){
+    const spotLight = new thr.SpotLight('#FFFFFF', 0.6, 60)
+    spotLight.position.set(x, y, z)
+    spotLight.castShadow = true
+    
+    return spotLight
+}
+const sL1 = createSpotlight14(13, 2, 13)
+const sL2 = createSpotlight14(13, 2, -13)
+const sL3 = createSpotlight14(-13, 2, 13)
+const sL4 = createSpotlight14(-13, 2, -13)
+scene.add(sL1, sL2, sL3, sL4)
+
+function createSpotlight56(x, y, z, a, b, c){
+    const spotLight = new thr.SpotLight('#FF0000', 0.8, 50)
+    spotLight.position.set(x, y, z)
+    spotLight.target.position.set(a, b, c);
+
+    return spotLight
+}
+const sL5 = createSpotlight56(6, 13, 0, 50, 0, 0)
+const sL6 = createSpotlight56(-6, 13, 0, -50, 0, 0)
+// scene.add(sL5, sL6)
 
 function finalScene() {
-  requestAnimationFrame(finalScene);
-  if (sphere.position.y >= 0) {
-    sphere.position.y -= 0.01;
-  }
-  spotlight1.color.set(0xff0000);
-  spotlight2.color.set(0xff0000);
-  spotlight3.color.set(0xff0000);
-  spotlight4.color.set(0xff0000);
-  scene.add(spotlight5);
-  scene.add(spotlight6);
-  pillarFallAnimation();
+    requestAnimationFrame(finalScene);
+    if (treasure.position.y >= 0) {
+        treasure.position.y -= 0.01;
+    }
+    sL1.color.set('#FF0000');
+    sL2.color.set('#FF0000');
+    sL3.color.set('#FF0000');
+    sL4.color.set('#FF0000');
+    scene.add(sL5);
+    scene.add(sL6);
+    pillarFall();
 }
 
 function onMouseDown(event) {
-  // console.log("Mouse down event detected!");
-  // console.log("Mouse coordinates:", event.clientX, event.clientY);
-  event.preventDefault();
-  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  raycast.setFromCamera(pointer, sceneCamera);
-  const intersects = raycast.intersectObjects([clickText, sphere]);
-  if (intersects.length > 0) {
-    console.log("text clicked!");
-    finalScene();
-  }
-}
+    // console.log("Mouse down event detected!");
+    // console.log("Mouse coordinates:", event.clientX, event.clientY);
+    console.log("clickText", text);
+    console.log("sphere", treasure);
 
+    event.preventDefault();
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycast.setFromCamera(pointer, camera);
+    const intersects = raycast.intersectObjects([Text, treasure]);
+    if (intersects.length > 0) {
+      console.log("text clicked!");
+      finalScene();
+    }
+}
+  
 document.addEventListener("click", onMouseDown, false);
 
-function render() {
-  requestAnimationFrame(render);
-  control.update();
-  renderer.render(scene, sceneCamera);
+// Camera Frame
+// orbitCamera.position.set(0, 20, 70)
+
+camera.position.set(0, 20, 70)
+camera.lookAt(0, 0, 0)
+
+// render
+function render(){
+    requestAnimationFrame(render)
+    control.update()
+    renderer.render(scene, currentCamera)
 }
 
-window.onload = () => {
-  pointLight();
-  ground();
-  altar();
-  text();
-  treasure();
-  skybox();
-  render();
-};
+window.onload = () => render()
 
 window.onresize = () => {
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-
-  renderer.setSize(width, height);
-  const aspect = width / height;
-};
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+  
+    renderer.setSize(width, height);
+    const aspect = width / height;
+  };
